@@ -27,6 +27,20 @@ export function canShareFile(file: File) {
   );
 }
 
+/**
+ * Capability is not the right test for "Share to X".
+ *
+ * macOS Safari happily reports it can share files, but its share sheet is
+ * AirDrop/Mail/Messages/Notes — X is not in it, so routing a desktop user
+ * there dead-ends them. Only phones and tablets have an OS sheet that lists
+ * X, so gate on the input device instead and send everyone else to the
+ * web intent.
+ */
+export function isTouchDevice() {
+  if (typeof navigator === "undefined" || typeof matchMedia !== "function") return false;
+  return matchMedia("(pointer: coarse)").matches && navigator.maxTouchPoints > 0;
+}
+
 export function downloadBlob(blob: Blob, filename: string) {
   const url = URL.createObjectURL(blob);
   const a = document.createElement("a");

@@ -15,7 +15,15 @@ import {
 import { builderNumber } from "@/lib/hash";
 import { loadPhoto, type LoadedPhoto } from "@/lib/image";
 import { rollTitle } from "@/lib/titles";
-import { canShareFile, downloadBlob, haptic, passId, shareCaption, tweetIntentUrl } from "@/lib/share";
+import {
+  canShareFile,
+  downloadBlob,
+  haptic,
+  isTouchDevice,
+  passId,
+  shareCaption,
+  tweetIntentUrl,
+} from "@/lib/share";
 
 type Phase = "compose" | "booting" | "ready";
 
@@ -156,8 +164,8 @@ export default function Studio() {
       const blob = await renderPassBlob(data, 1);
       const file = new File([blob], passFileName(name), { type: "image/png" });
 
-      // mobile: attach the actual PNG to the native sheet
-      if (canShareFile(file)) {
+      // phones/tablets: the OS sheet lists X, so hand it the actual PNG
+      if (isTouchDevice() && canShareFile(file)) {
         await navigator.share({
           files: [file],
           text: shareCaption(name, title),
@@ -169,7 +177,11 @@ export default function Studio() {
       // desktop: X intent, with the share link so the card unfurls in the preview
       const link = shareLink ?? (await publish());
       window.open(tweetIntentUrl(shareCaption(name, title, link ?? undefined)), "_blank", "noopener");
-      if (!link) setStatus("Posted without a link — download the PNG and attach it.");
+      setStatus(
+        link
+          ? "Opened X — your link unfurls the card. Download the PNG to attach it directly too."
+          : "Opened X without a link — download the PNG and attach it."
+      );
     } catch (err) {
       // AbortError = user dismissed the share sheet; not worth surfacing
       if (!(err instanceof DOMException && err.name === "AbortError")) {
