@@ -1,5 +1,4 @@
 "use client";
-
 import { AnimatePresence, motion } from "framer-motion";
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import BootLog from "./BootLog";
@@ -14,7 +13,7 @@ import {
 } from "@/lib/card";
 import { builderNumber } from "@/lib/hash";
 import { loadPhoto, type LoadedPhoto } from "@/lib/image";
-import { rollTitle } from "@/lib/titles";
+import { BUILDER_TITLES, rollTitle } from "@/lib/titles";
 import {
   canShareFile,
   downloadBlob,
@@ -30,7 +29,11 @@ type Phase = "compose" | "booting" | "ready";
 export default function Studio() {
   const [name, setName] = useState("");
   const [stack, setStack] = useState("");
-  const [title, setTitle] = useState(() => rollTitle());
+  const [title, setTitle] = useState<string>(BUILDER_TITLES[0]);
+
+useEffect(() => {
+  setTitle(rollTitle());
+}, []);
   const [photo, setPhoto] = useState<LoadedPhoto | null>(null);
   const [transform, setTransform] = useState<Transform>(DEFAULT_TRANSFORM);
 
@@ -165,14 +168,22 @@ export default function Studio() {
       const file = new File([blob], passFileName(name), { type: "image/png" });
 
       // phones/tablets: the OS sheet lists X, so hand it the actual PNG
-      if (isTouchDevice() && canShareFile(file)) {
-        await navigator.share({
-          files: [file],
-          text: shareCaption(name, title),
-        });
-        haptic(16);
-        return;
-      }
+      // after
+if (isTouchDevice() && canShareFile(file)) {
+  const caption = shareCaption(name, title);
+  // X's iOS/Android share extension unreliably keeps `text` when `files`
+  // is also present — it silently drops the image. Ship the file alone,
+  // and put the caption on the clipboard as a one-tap paste instead.
+  try {
+    await navigator.clipboard.writeText(caption);
+  } catch {
+    /* clipboard permission denied — not fatal */
+  }
+  await navigator.share({ files: [file] });
+  haptic(16);
+  setStatus("Caption copied — paste it into your X post.");
+  return;
+}
 
       // desktop: X intent, with the share link so the card unfurls in the preview
       const link = shareLink ?? (await publish());
