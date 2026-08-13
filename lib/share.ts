@@ -38,7 +38,9 @@ export function canShareFile(file: File) {
  */
 export function isTouchDevice() {
   if (typeof navigator === "undefined" || typeof matchMedia !== "function") return false;
-  return matchMedia("(pointer: coarse)").matches && navigator.maxTouchPoints > 0;
+  const coarse = matchMedia("(pointer: coarse)").matches;
+  const noHover = matchMedia("(hover: none)").matches;
+  return coarse && noHover && navigator.maxTouchPoints > 0;
 }
 
 export function downloadBlob(blob: Blob, filename: string) {
