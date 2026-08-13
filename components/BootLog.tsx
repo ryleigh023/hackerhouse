@@ -32,11 +32,13 @@ export default function BootLog({ lines, duration = 2000, onDone, onProgress }: 
     let raf = 0;
     let start = 0;
     let finished = false;
+    let backstop = 0;
 
     const finish = () => {
       if (finished) return;
       finished = true;
       cancelAnimationFrame(raf);
+      clearTimeout(backstop);
       setTyped(lines);
       setDone(true);
       progressRef.current?.(1);
@@ -48,6 +50,11 @@ export default function BootLog({ lines, duration = 2000, onDone, onProgress }: 
       finish();
       return;
     }
+
+    // rAF is suspended entirely while the tab is hidden, so a user who switches
+    // apps mid-generate would otherwise be stranded on a frozen log with no
+    // download button. setTimeout still fires in the background — belt and braces.
+    backstop = window.setTimeout(finish, duration + 600);
 
     const tick = (ts: number) => {
       if (!start) start = ts;
@@ -72,7 +79,10 @@ export default function BootLog({ lines, duration = 2000, onDone, onProgress }: 
     };
 
     raf = requestAnimationFrame(tick);
-    return () => cancelAnimationFrame(raf);
+    return () => {
+      cancelAnimationFrame(raf);
+      clearTimeout(backstop);
+    };
   }, [lines, duration]);
 
   return (
