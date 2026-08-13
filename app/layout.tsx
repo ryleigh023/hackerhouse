@@ -31,8 +31,9 @@ export const viewport: Viewport = {
   themeColor: "#04140B",
   width: "device-width",
   initialScale: 1,
-  // the pass is pannable/pinchable, so lock page zoom to keep gestures unambiguous
-  maximumScale: 1,
+  // deliberately NOT capping maximumScale: locking page zoom fails WCAG 1.4.4.
+  // The card's own pinch-to-zoom stays unambiguous via `touch-action: none`
+  // on the canvas, which claims those gestures without disabling page zoom.
   viewportFit: "cover",
 };
 

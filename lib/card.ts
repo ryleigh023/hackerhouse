@@ -507,8 +507,8 @@ export function drawPass(ctx: CanvasRenderingContext2D, data: PassData) {
   ctx.fillText(stackFit.text, X0 + caretW, 988);
 
   // the event's line, sitting where the badge would emboss it
-  ctx.font = `500 13px ${canvasFonts.mono}`;
-  ctx.fillStyle = "rgba(255,251,232,0.38)";
+  ctx.font = `500 14px ${canvasFonts.mono}`;
+  ctx.fillStyle = "rgba(255,251,232,0.55)";
   tracked(ctx, EVENT.tagline, X0, 1024, 3.4);
 
   /* ---------------------------------------------------- perforation */
